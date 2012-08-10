@@ -1,0 +1,29 @@
+{
+	"name": "authen",
+	"version": "0.0.1",
+	"description": "Authentication utils - signing, tokens, password hashes",
+	"keywords": ["authentification", "sign", "token", "password hash", "urlsafe base64"],
+	"author": {
+		"name": "Dmitry Smolin",
+		"email": "dimsmol@gmail.com"
+	},
+	"preferGlobal": false,
+	"private": false,
+	"dependencies": {
+		"async": "~0.1.17",
+		"cookie": "~0.0.4",
+		"ncbt": "~0.0.1",
+		"ops": "~0.0.1"
+	},
+	"engines": {
+		"node": "~0.8.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/dimsmol/authen"
+	},
+	"directories": {
+		"lib": "./lib"
+	},
+	"main": "./lib/index"
+}
