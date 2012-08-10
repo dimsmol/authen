@@ -1,7 +1,7 @@
 {
 	"name": "authen",
 	"version": "0.0.1",
-	"description": "Authentication utils - signing, tokens, password hashes",
+	"description": "Authentication tools - signing, tokens, password hashes",
 	"keywords": ["authentification", "sign", "token", "password hash", "urlsafe base64"],
 	"author": {
 		"name": "Dmitry Smolin",
