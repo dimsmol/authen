@@ -44,7 +44,7 @@ Tokener is designed to be protocol-independent, but has number of utility method
 	* signer is a Signer or Signer-like object
 	* options are complex enough, some aspects are described below, see sources for full reference and defaults
 	* identityEqualsFunc(identityA, identityB) can be used for identities that are coplex structures instead of simple types such as integer or string ids. If not set, '===' operator will be used to check equality.
-	* getLastRevocationTimeFunc(token) is required (and highly recommended) to use ability to revoke previously issued tokens. Must return point in time when revokation was performed last time for identity represented by the token or null if no revokations were performed. If not set, no revokation checks will be performed.
+	* getLastRevocationTimeFunc(token) is required (and highly recommended) to use ability to revoke previously issued tokens. Must return point in time when revocation was performed last time for identity represented by the token or null if no revocations were performed. If not set, no revocation checks will be performed.
 
 * login(identity) -> tokenResult - creates token for given identity and returns information about it along with itself
 	* tokenResult is `{ identity: loggedInIdentity, token: token, issued: issuedDate, maxAge: maxAgeInSeconds }`
@@ -67,7 +67,7 @@ Tokener is designed to be protocol-independent, but has number of utility method
 			* additionalToken is provided and it is correct
 			* additionalToken matches token
 		* token is not revoked
-			* token is not issued as a renewal too close to last revokation (see "Token revokation" below)
+			* token is not issued as a renewal too close to last revocation (see "Token revocation" below)
 		* identity matches expectedIdentity (if provided)
 	* if renewal is needed, auth() also provides renewal data
 * applyRenewal(res, renewal) - applies renewal data provided by previously called auth()
@@ -113,8 +113,8 @@ If auth() got valid token and more than options.renewal.interval amount of time 
 
 Renewed token will mimic all properties of original one, including whether it is cookie token or not and if it is cookie token, should it have browser session lifetime or not. The only difference is that unlike renewed tokens, tokens obtained by providing password are marked as "strong" and are tolerant to revocation trust delay described below.
 
-### Token revokation
+### Token revocation
 
-getLastRevocationTimeFunc(token) must return last revokation time. All tokens issued before that time will be treated as invalid (revoked), as well as tokens that were renewed (see renewal) within options.postRevokationTrustDelay interval after that time.
+getLastRevocationTimeFunc(token) must return last revocation time. All tokens issued before that time will be treated as invalid (revoked), as well as tokens that were renewed (see renewal) within options.postRevocationTrustDelay interval after that time.
 
-Revocation trust delay is needed to disallow keeping compromised token alive by continuous renewal. Renewals close to revokation moment will be discarded to insure we're using only renewed tokens obtained after all servers informed about revokation.
+Revocation trust delay is needed to disallow keeping compromised token alive by continuous renewal. Renewals close to revocation moment will be discarded to insure we're using only renewed tokens obtained after all servers informed about revocation.
