@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/dimsmol/authen.png)](http://travis-ci.org/dimsmol/authen)
 # authen
 
 Solves following problems:
