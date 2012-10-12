@@ -47,7 +47,7 @@ Tokener is designed to be protocol-independent, but has number of utility method
 	* getLastRevocationTimeFunc(token) is required (and highly recommended) to use ability to revoke previously issued tokens. Must return point in time when revocation was performed last time for identity represented by the token or null if no revocations were performed. If not set, no revocation checks will be performed.
 
 * login(identity) -> tokenResult - creates token for given identity and returns information about it along with itself
-	* tokenResult is `{ identity: loggedInIdentity, token: token, issued: issuedDate, maxAge: maxAgeInSeconds }`
+	* tokenResult is `{ identity: loggedInIdentity, token: token, issued: issuedDate, maxAge: maxAgeMilliseconds }`
 	* login() expects you are managing token (storing, deleting on logout) yourself
 	* token then must be provided within options.headers.name request header for every request
 * loginWithCookies(res, identity, isSessionLifetime) -> tokenResult - the same as login(), but tokenResult will not contain token itself, instead it will be placed to cookies. isSessionLifetime when true indicates that cookies must have browser's session lifetime
@@ -62,7 +62,7 @@ Tokener is designed to be protocol-independent, but has number of utility method
 	* tokenData is `{ auth: { identity: identity, ..other token data.. }, renewal: renewalData }`
 	* auth() checks:
 		* token is properly signed according to signer
-		* token is not expired accoring to options.timeout
+		* token is not expired accoring to options.maxAge
 		* if token is limited:
 			* additionalToken is provided and it is correct
 			* additionalToken matches token
@@ -105,7 +105,7 @@ Altrenatives available:
 
 ### Token expiration
 
-Token treated as expired if more than options.timeout amount of time passed since it was issued.
+Token treated as expired if more than options.maxAge amount of time passed since it was issued.
 
 ### Token renewal
 
