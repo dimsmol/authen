@@ -1,6 +1,6 @@
 {
 	"name": "authen",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Authentication tools - signing, tokens, password hashes",
 	"keywords": ["authentification", "sign", "token", "password hash", "urlsafe base64"],
 	"author": {
