@@ -111,6 +111,8 @@ Methods:
 * isAuthProblem(err) - checks if err is AuthProblem object
 * clearCookies(res) - clears auth cookies
 
+Note, that req and res arguments accepted by any of AuthProvider's methods will be just passed to adapter and won't used by AuthProvider itself. So, you use non-standard req or res objects with your own adapter instead of HttpAdapter with no need to change anything in AuthProvider.
+
 ## Tokener
 
 Creates and parses tokens.
