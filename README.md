@@ -4,7 +4,11 @@ Features:
 
 * Passwords hashing for storing them on server-side and validation against the hashes
 * Signing data with secret
+* Encrypting and decrypting data with secret
+* Creation of simple tokens - signed or both encrypted and signed
 * Creation of auth tokens, validating them, handle renewal, expiration and revocation
+
+If you are planning to use encryption, see "Notes on Encryption" to avoid possible pitfalls.
 
 Additional tools:
 
@@ -36,9 +40,31 @@ Methods:
 		* key - actually used key (guaranted to to the same as opt_key, if specified)
 * calcSignatureRaw(data, algoName, secret) - internally used by calcSignature
 	* returns null if data or secret is empty or algorythm is not allowed (the only allowed algo is 'sha1')
-	* otherwise returns signature, url safe base64 string
+	* otherwise returns signature as base64 string
 * isValidSignature(signature, data, algoName, key) - returns true if signature is valid for given parameters
 * isValidSignatureRaw(signature, data, algoName, secret) - internally used by isValidSignature
+
+## Crypter
+
+Encrypts and decrypts data using specified secret provided by dictionary of secrets.
+
+Options:
+
+* secrets - dict of secrets that can be used by signer
+* currentKey - default key to get secret for signing
+
+Methods:
+
+* encrypt(data, opt_algoName, opt_key) - encrypts data, using given algorythm and secret specified by given key. If algo name or key is not specified, defaults are used.
+	* returns a dict with the following fields:
+		* data - encrypted data, as returned by encryptRaw
+		* algoName - actually used algoName (guaranted to to the same as opt_algoName, if specified)
+		* key - actually used key (guaranted to to the same as opt_key, if specified)
+* encryptRaw(data, algoName, secret) - internally used by encrypt()
+	* returns null if data or secret is empty or algorythm is not allowed (the only allowed algo is 'aes256')
+	* otherwise returns encrypted data as base64 string
+* decrypt(data, algoName, key) - decrypts data
+* decryptRaw(data, algoName, secret) - internally used by decrypt()
 
 ## AuthProvider
 
@@ -53,18 +79,22 @@ Options:
 
 Initialization methods:
 
-* setTokener(tokener) - sets token creator, usually Tokener instance, see below
+* setTokener(tokener) - sets token creator, usually AuthTokener instance, see below
+	* don't use Tokener instance instead of AuthTokener, it lacks number of methods required by AuthProvider
 * setAdapter(adapter) - sets auth data extractor and applier, usually HttpAdapter instance, see below
 * setRevoker(revoker) - sets optional object providing tokens revocation info, usually Revoker subclass instance, see below
 
 Initialization example:
 
 ```js
-var provider = new AuthProvider();
-provider.setTokener(new Tokener(new Signer({
+var tokener = new AuthTokener();
+tokener.setSigner(new Signer({
 	secrets: { a: 'my secret' },
 	currentKey: 'a'
-})));
+}));
+
+var provider = new AuthProvider();
+provider.setTokener(tokener);
 provider.setAdapter(new HttpAdapter());
 ```
 
@@ -115,14 +145,41 @@ Note, that req and res arguments accepted by any of AuthProvider's methods will 
 
 ## Tokener
 
-Creates and parses tokens.
+Creates and parses tokens. Too simple for most cases, but can be used as a base for your tokeners.
+
+Methods:
+
+* setSigner(signer) - sets signer, usually Signer instance
+* setCrypter(crypter) - sets crypter, usually Crypter instance
+* createToken(data, opt_prefix) - creates token
+	* expects data to be a string
+	* token will be prepended with opt_prefix, that can be later obtained with Token.getPrefix()
+* parseToken(token) - parses token
+	* returns null if tokencannot be parsed or signature is invalid
+	* otherwise returns a dict:
+		* data - token data as previously passed to createToken()
+		* issued - when token was created, timestamp
+* isValidIssued(issued, opt_allowedIssuedClockDeviation) - checks if issued is valid
+	* is timestamp and is not too far in future (not further than on opt_allowedIssuedClockDeviation ms)
+* isExpired(issued, maxAge) - checks if issued is expired
+	* maxAge is in ms
+
+Both createToken() and parseToken() will return null if token is not at least signed. It can happen, for example, if both signer and crypter are null. See also "Notes on Encryption" below.
+
+Static methods:
+
+* getPrefix(token, opt_separator) - extracts token prefix
+	* opt_separator can be used for child classes overriding Tokener.prototype.separator
+
+## AuthTokener
+
+Creates and parses auth tokens. Is subclass of Tokener.
 
 Number of Tokener methods made asynchronous to allow session-based token classes keeping the same interface.
 
 Constructor:
 
-* Tokener(signer, opt_options)
-	* signer - usually instance of Signer
+* Tokener(opt_options)
 	* options available:
 		* prefix - prefix to be used for token, useful for separating different kinds of tokens, token versioning or whatever, empty string by default
 
@@ -145,7 +202,7 @@ Methods:
 		* useCookies
 		* isSessionLifetime
 	* returns the same as createToken()
-* extractTokenData(token, additionalToken, cb) - extracts token data checking signature and handling additional token
+* parseToken(token, additionalToken, cb) - extracts token data checking signature and handling additional token
 	* returns a dict:
 		* identityStr
 		* issued
@@ -226,3 +283,23 @@ And again, all this stuff is useful only for authentication using cookies, sendi
 If user authenticated in one browser tab reauthenticates in other, first one will send requests with new auth cookies without even knowing it. So it can end up with mixed data - some loaded with old authentication and some with new one.
 
 To prevent such a mess, you can add expected identity known to your application to HTTP header (usuall X-AuthExpected). If expected identity is provided, AuthProvider will check that your auth token is expected one.
+
+## Notes on Encryption
+
+### Signing
+
+Encryption itself is not enough to protect your tokens. You must encrypt data then sign. Some encryption algorythms provide signing themselves, for all others you must use signing provided by authen.
+
+Tokener ensures that data are at least signed (by Signer or by encryption algorythm). That's why you can get null from createToken() if signer is null even if crypter is not null.
+
+Also, do not use the same secrets for encryption and for signing.
+
+### Data Padding
+
+Sometimes your data length can be guessed by token length. And then your data can be guessed by data length. It is especially true if your data are short, which is true for most tokens.
+
+If, for example, your data length is 1 byte, there are only 256 varinants what they are.
+
+Problem can still remain for relatively large data. For example, if data is stringifyed user id and you have 10005 users total, any data of size 5 indicates a user with id between 10000 and 10005 - only 6 possible variants.
+
+Usually, encryption algorythm will extaned your data to the nearest block size and it will make guessing harder. But to be completely sure your data cannot by guessed by length, it's recommended to pad them to some certain length before encryption. You can do it overriding Tokener's packData() and unpackData() methods.
