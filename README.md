@@ -28,20 +28,27 @@ Signs data using specified secret provided by dictionary of secrets.
 
 Options:
 
+* algo - optional, default algorythm to use, 'sha1' will be used if not specified
+* allowedAlgos - optional, list of allowed algos (in addition to algo)
 * secrets - dict of secrets that can be used by signer
 * currentKey - default key to get secret for signing
 
 Methods:
 
-* calcSignature(data, opt_algoName, opt_key) - calculates signature for data, using given algorythm and secret specified by given key. If algo name or key is not specified, defaults are used.
+* calcSignature(data, opt_algo, opt_key) - calculates signature for data, using given algorythm and secret specified by given key
+	* arguments
+		* data can be string or Buffer
+		* algo from options will be used if opt_algo is missed
+		* currentKey from options will be used if opt_key is missed
 	* returns a dict with the following fields:
 		* signature - signature, as returned by calcSignatureRaw
 		* algoName - actually used algoName (guaranted to to the same as opt_algoName, if specified)
 		* key - actually used key (guaranted to to the same as opt_key, if specified)
 * calcSignatureRaw(data, algoName, secret) - internally used by calcSignature
-	* returns null if data or secret is empty or algorythm is not allowed (the only allowed algo is 'sha1')
-	* otherwise returns signature as base64 string
+	* returns null if data or secret is empty or algorythm is not allowed
+	* otherwise returns signature (a Buffer object)
 * isValidSignature(signature, data, algoName, key) - returns true if signature is valid for given parameters
+	* signature can be base64 string or Buffer
 * isValidSignatureRaw(signature, data, algoName, secret) - internally used by isValidSignature
 
 ## Crypter
@@ -50,20 +57,28 @@ Encrypts and decrypts data using specified secret provided by dictionary of secr
 
 Options:
 
+* algo - optional, default algorythm to use, 'aes256' if not specified
+* allowedAlgos - optional, list of allowed algos (in addition to algo)
+* signingAlgos - optional, list of algos that includes signing in addition to encryption, dangerous, use only if you know what you're doing
 * secrets - dict of secrets that can be used by signer
 * currentKey - default key to get secret for signing
 
 Methods:
 
-* encrypt(data, opt_algoName, opt_key) - encrypts data, using given algorythm and secret specified by given key. If algo name or key is not specified, defaults are used.
+* encrypt(data, opt_algo, opt_key) - encrypts data, using given algorythm and secret specified by given key
+	* arguments
+		* data can be utf8 string or Buffer
+		* algo from options will be used if opt_algo is missed
+		* currentKey from options will be used if opt_key is missed
 	* returns a dict with the following fields:
 		* data - encrypted data, as returned by encryptRaw
 		* algoName - actually used algoName (guaranted to to the same as opt_algoName, if specified)
 		* key - actually used key (guaranted to to the same as opt_key, if specified)
 * encryptRaw(data, algoName, secret) - internally used by encrypt()
-	* returns null if data or secret is empty or algorythm is not allowed (the only allowed algo is 'aes256')
-	* otherwise returns encrypted data as base64 string
+	* returns null if data or secret is empty or algorythm is not allowed
+	* otherwise returns encrypted data (a Buffer object)
 * decrypt(data, algoName, key) - decrypts data
+	* data can be base64 string or Buffer
 * decryptRaw(data, algoName, secret) - internally used by decrypt()
 
 ## AuthProvider
@@ -146,6 +161,15 @@ Note, that req and res arguments accepted by any of AuthProvider's methods will 
 ## Tokener
 
 Creates and parses tokens. Too simple for most cases, but can be used as a base for your tokeners.
+
+Token is a string guaranteed to contain only:
+
+* base64 characters
+* ':' character
+* characters of key and algo used by signer and/or crypter
+* your data characters (if not encrypted)
+
+Note, that characters from your data may be left "as is", so you possibly will want to perform escaping or something.
 
 Methods:
 
