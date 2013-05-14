@@ -175,11 +175,17 @@ Methods:
 
 * setSigner(signer) - sets signer, usually Signer instance
 * setCrypter(crypter) - sets crypter, usually Crypter instance
+* setAlgoMaps(maps) - sets optional mapping for algorythm names substitution, allows to hide real argorythm names or substitute they with shorter codes within token
+	* maps is a dict with two optional properties:
+		* signer - map for signer algorythm names
+		* crypter - map for crypter algorythm names
+			* map is a dict where key is algorythm name as used by crypter or signer and value is a string to be used within created token instead of real algorythm name
+			* Note, that if map is present, but no mapping is found for particular algorythm, exception will be thrown (you can change this by overriding getMissedAlgoMapping() method)
 * createToken(data, opt_prefix) - creates token
 	* expects data to be a string
 	* token will be prepended with opt_prefix, that can be later obtained with Token.getPrefix()
 * parseToken(token) - parses token
-	* returns null if tokencannot be parsed or signature is invalid
+	* returns null if token cannot be parsed or signature is invalid
 	* otherwise returns a dict:
 		* data - token data as previously passed to createToken()
 		* issued - when token was created, timestamp
