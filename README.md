@@ -92,8 +92,9 @@ Options:
 * renewalInterval - how often renew token, 1 week by default
 * allowedIssuedClockDeviation - ms, how far in future can be issue date of token to still treat it as valid (useful to deal with small server clocks deviations), 5 min by default
 
-Initialization methods:
+Initialization methods and properties:
 
+* type - string, can be used to identify provider if multiple are used
 * setTokener(tokener) - sets token creator, usually AuthTokener instance, see below
 	* don't use Tokener instance instead of AuthTokener, it lacks number of methods required by AuthProvider
 * setAdapter(adapter) - sets auth data extractor and applier, usually HttpAdapter instance, see below
@@ -115,7 +116,7 @@ provider.setAdapter(new HttpAdapter());
 
 Methods:
 
-* login(res, identityStr, options, cb) - creates auth tokens for given identity, applies auth to res if res is not null
+* login(res, identity, options, cb) - creates auth tokens for given identity, applies auth to res if res is not null
 	* options available:
 		* useCookies - set auth cookies if res is not null
 		* isSessionLifetime - make cookies session lifetime
@@ -124,13 +125,14 @@ Methods:
 			* token
 			* limitedToken
 			* issued - token timestamp
+		* identityStr - string representation of identity
 		* result - result ready to return to client
 			* token
 			* issued
 			* maxAge
 			* isLimited - true if token is limited, see "CSRF protection" below
+			* Note that identity and identityStr are not included to result, because it isn't always useful. If you need one of them or both, please include them yourself.
 * auth(req, res, options, cb) - extracts authentication data from request, creates renewal if need and applies it to res if it is not null
-			* Note, that result doesn't contain identity, because AuthProvider knows only it's string representation. So, you need to add it yourself. Also it could be useful sometimes to include identityStr into result as well, to use it as expected identity.
 	* options available:
 		* allowUnprotected - allows success even if not CSRF protected (useful for static files)
 		* renewalMode - sets renewal mode:
@@ -138,11 +140,14 @@ Methods:
 			* 'skip' - do not renew
 			* 'force' - renew
 	* returns dict with:
-		* authData - auth data extracted from req
-		* tokenData - data extracted from token
-		* renewalTokenInfo - token info used for renewal, structure is same as tokenInfo field returned by login()
-		* renewal - renewal result ready to send to client, structure is same as result field returned by login()
-	* can return AuthProblem object as an error, it's data field usually contains part of normal result, it's code field indicates type of problem:
+		* type - provider type as initialized
+		* identity - resolved identity
+		* authResult - dict with lowlevel data:
+			* authData - auth data extracted from req
+			* tokenData - data extracted from token
+			* renewalTokenInfo - token info used for renewal, structure is same as tokenInfo field returned by login()
+			* renewal - renewal result ready to send to client, structure is same as result field returned by login()
+	* can return AuthProblem object as an error, it's data field usually contains partially filled authResult structure of normal result, it's code field indicates type of problem:
 			* NoAuthData - no auth data found
 			* CSRF - CSRF protection required, but not found
 			* InvalidToken - couldn't understand token
