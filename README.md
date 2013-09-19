@@ -147,18 +147,17 @@ Methods:
 			* tokenData - data extracted from token
 			* renewalTokenInfo - token info used for renewal, structure is same as tokenInfo field returned by login()
 			* renewal - renewal result ready to send to client, structure is same as result field returned by login()
-	* can return AuthProblem object as an error, it's data field usually contains partially filled authResult structure of normal result, it's code field indicates type of problem:
-			* NoAuthData - no auth data found
-			* CSRF - CSRF protection required, but not found
-			* InvalidToken - couldn't understand token
-			* InvalidIssued - token's issued field is invalid (for example, too far in future)
-			* Expired - token is expired
-			* UnexpectedIdentity - token represents other identity than is expected, see "Expected Identity" below
-			* Revoked - token is revoked
+	* can return AuthProblem object as an error, it's a [marked type](https://github.com/dimsmol/marked_types) and it's data field usually contains partially filled authResult structure of normal result, it's code field indicates type of problem:
+		* NoAuthData - no auth data found
+		* CSRF - CSRF protection required, but not found
+		* InvalidToken - couldn't understand token
+		* InvalidIssued - token's issued field is invalid (for example, too far in future)
+		* Expired - token is expired
+		* UnexpectedIdentity - token represents other identity than is expected, see "Expected Identity" below
+		* Revoked - token is revoked
 * authByData(authData, res, options, cb) - same as auth(), but requires extracted authData instead of req, used by auth()
 * renew(res, tokenData, cb) - creates renewal and applies it to res if it is not null, used by authByData()
 * needRenew(tokenData) - checks if token needs renewal, used by authByData()
-* isAuthProblem(err) - checks if err is AuthProblem object
 * clearCookies(res) - clears auth cookies
 
 Note, that req and res arguments accepted by any of AuthProvider's methods will be just passed to adapter and won't used by AuthProvider itself. So, you use non-standard req or res objects with your own adapter instead of HttpAdapter with no need to change anything in AuthProvider.
