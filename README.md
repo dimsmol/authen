@@ -337,3 +337,7 @@ If, for example, your data length is 1 byte, there are only 256 varinants what t
 Problem can still remain for relatively large data. For example, if data is stringifyed user id and you have 10005 users total, any data of size 5 indicates a user with id between 10000 and 10005 - only 6 possible variants.
 
 Usually, encryption algorythm will extaned your data to the nearest block size and it will make guessing harder. But to be completely sure your data cannot by guessed by length, it's recommended to pad them to some certain length before encryption. You can do it overriding Tokener's packData() and unpackData() methods.
+
+## License
+
+MIT
